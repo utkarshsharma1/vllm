@@ -33,7 +33,7 @@ TPU_STR_DTYPE_TO_TORCH_DTYPE = {
 
 try:
     import tpu_commons  # noqa: F401
-except ImportError:
+except ModuleNotFoundError:
     try:
         import tpu_inference  # noqa: F401
     except ImportError:
