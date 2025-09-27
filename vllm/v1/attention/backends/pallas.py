@@ -33,7 +33,7 @@ TPU_STR_DTYPE_TO_TORCH_DTYPE = {
 
 try:
     import tpu_commons  # noqa: F401
-except Exception as e:
+except ImportError:
     try:
         import tpu_inference  # noqa: F401
     except ImportError:
@@ -59,31 +59,31 @@ except Exception as e:
             return new_kv_cache
 
 
-    XLA_LIB.define(
-        "kv_cache_update_op(Tensor kv, Tensor slot_mapping," \
-        "Tensor kv_cache, Tensor num_kv_update_slices, int page_size," \
-        "int num_slices_per_block)" \
-        "-> Tensor", )
+        XLA_LIB.define(
+            "kv_cache_update_op(Tensor kv, Tensor slot_mapping," \
+            "Tensor kv_cache, Tensor num_kv_update_slices, int page_size," \
+            "int num_slices_per_block)" \
+            "-> Tensor", )
 
-    @impl(XLA_LIB, "kv_cache_update_op", "XLA")
-    def kv_cache_update_op_xla(kv: torch.Tensor, slot_mapping: torch.Tensor,
-                               kv_cache: torch.Tensor,
-                               num_kv_update_slices: torch.Tensor,
-                               page_size: int,
-                               num_slices_per_block: int) -> torch.Tensor:
-        new_kv_cache = kv_cache_update_op_impl(kv, slot_mapping, kv_cache,
-                                               num_kv_update_slices, page_size,
-                                               num_slices_per_block)
-        return new_kv_cache
+        @impl(XLA_LIB, "kv_cache_update_op", "XLA")
+        def kv_cache_update_op_xla(kv: torch.Tensor, slot_mapping: torch.Tensor,
+                                kv_cache: torch.Tensor,
+                                num_kv_update_slices: torch.Tensor,
+                                page_size: int,
+                                num_slices_per_block: int) -> torch.Tensor:
+            new_kv_cache = kv_cache_update_op_impl(kv, slot_mapping, kv_cache,
+                                                num_kv_update_slices, page_size,
+                                                num_slices_per_block)
+            return new_kv_cache
 
-    @impl(XLA_LIB, "kv_cache_update_op", "CompositeExplicitAutograd")
-    def kv_cache_update_op_non_xla(kv: torch.Tensor,
-                                   slot_mapping: torch.Tensor,
-                                   kv_cache: torch.Tensor,
-                                   num_kv_update_slices: torch.Tensor,
-                                   page_size: int,
-                                   num_slices_per_block: int) -> torch.Tensor:
-        return kv_cache
+        @impl(XLA_LIB, "kv_cache_update_op", "CompositeExplicitAutograd")
+        def kv_cache_update_op_non_xla(kv: torch.Tensor,
+                                    slot_mapping: torch.Tensor,
+                                    kv_cache: torch.Tensor,
+                                    num_kv_update_slices: torch.Tensor,
+                                    page_size: int,
+                                    num_slices_per_block: int) -> torch.Tensor:
+            return kv_cache
 
 
 class PallasAttentionBackend(AttentionBackend):
