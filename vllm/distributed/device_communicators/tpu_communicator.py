@@ -11,6 +11,7 @@ from vllm.config import get_current_vllm_config
 from vllm.logger import init_logger
 from vllm.platforms import current_platform
 from vllm.platforms.tpu import USE_TPU_COMMONS
+from vllm.platforms.tpu import USE_TPU_INFERENCE
 
 from .base_device_communicator import DeviceCommunicatorBase
 
@@ -19,8 +20,8 @@ USE_RAY = parallel_config = get_current_vllm_config(
 
 logger = init_logger(__name__)
 
-if not USE_TPU_COMMONS:
-    logger.info("tpu_commons not found, using vLLM's TpuCommunicator")
+if not USE_TPU_COMMONS or not USE_TPU_INFERENCE:
+    logger.info("tpu_commons/tpu_inference not found, using vLLM's TpuCommunicator")
     if current_platform.is_tpu():
         import torch_xla
         import torch_xla.core.xla_model as xm
@@ -98,5 +99,10 @@ class TpuCommunicator(DeviceCommunicatorBase):
 
 if USE_TPU_COMMONS:
     from tpu_commons.distributed.device_communicators import (
+        TpuCommunicator as TpuCommonsCommunicator)
+    TpuCommunicator = TpuCommonsCommunicator  # type: ignore
+
+if USE_TPU_INFERENCE:
+    from tpu_inference.distributed.device_communicators import (
         TpuCommunicator as TpuCommonsCommunicator)
     TpuCommunicator = TpuCommonsCommunicator  # type: ignore
