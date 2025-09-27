@@ -223,18 +223,22 @@ class TpuPlatform(Platform):
         return True
 
 
+# Try to import the preferred platform first (tpu_inference)
 try:
-    from tpu_commons.platforms import TpuPlatform as TpuCommonsPlatform
-    TpuPlatform = TpuCommonsPlatform  # type: ignore
-    USE_TPU_COMMONS = True
-except ImportError:
-    logger.info("tpu_commons not found, using vLLM's TpuPlatform")
-    pass
-
-try:
-    from tpu_inference.platforms import TpuPlatform as TpuCommonsPlatform
-    TpuPlatform = TpuCommonsPlatform  # type: ignore
+    from tpu_inference.platforms import TpuPlatform as TpuInferencePlatform
+    TpuPlatform = TpuInferencePlatform  # type: ignore
     USE_TPU_INFERENCE = True
+    logger.debug("Using tpu_inference for TpuPlatform.")
 except ImportError:
-    logger.info("tpu_inference not found, using vLLM's TpuPlatform")
-    pass
+    # If tpu_inference is not found, try the fallback (tpu_commons)
+    logger.debug("tpu_inference not found, trying tpu_commons.")
+    try:
+        from tpu_commons.platforms import TpuPlatform as TpuCommonsPlatform
+        TpuPlatform = TpuCommonsPlatform  # type: ignore
+        USE_TPU_COMMONS = True
+        logger.debug("Using tpu_commons for TpuPlatform.")
+    except ImportError:
+        # If neither is found, the default vLLM TpuPlatform will be used.
+        logger.debug(
+            "tpu_commons not found. Using vLLM's default TpuPlatform.")
+        pass
